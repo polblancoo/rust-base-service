@@ -1,0 +1,19 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+axum.workspace = true
+validator.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+config.workspace = true
+dotenv.workspace = true
+anyhow.workspace = true
+jsonwebtoken.workspace = true
+#auth = { path = "../auth" }
+shared = { path = "../shared" }
