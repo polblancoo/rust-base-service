@@ -19,7 +19,7 @@ uuid.workspace = true
 jsonwebtoken.workspace = true
 
 # Dependencias internas
-auth = { path = "../auth" }
+
 database = { path = "../database" }
 common = { path = "../common" }
 shared = { path = "../shared" }

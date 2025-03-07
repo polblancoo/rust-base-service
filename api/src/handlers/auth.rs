@@ -6,20 +6,34 @@ use axum::{
 use std::sync::Arc;
 use common::error::AppError;
 use shared::user::{CreateUserSchema, FilteredUser, LoginUserSchema};
-use shared::AppState;
+use crate::AppState;
 use common::jwt::{Claims, verify_jwt};
 
 use serde_json::{json, Value};
 use validator::Validate;
 use axum::body::Body;
 use axum::middleware::Next;
-use axum::extract::State;
+use axum::extract::{State,  Query};
 use axum::response::Response;
 use serde::Serialize;
+use uuid::Uuid;
+
+// Definimos un trait para AuthService
+pub trait AuthService: Send + Sync {
+    fn register_user(&self, user_data: &CreateUserSchema, telegram_id: Option<String>) -> Result<FilteredUser, String>;
+    fn authenticate_by_email(&self, email: &str, password: &str) -> Result<shared::user::User, String>;
+    fn authenticate_by_telegram(&self, telegram_id: &str) -> Result<shared::user::User, String>;
+    fn generate_token(&self, user: &shared::user::User) -> Result<String, String>;
+    fn get_user(&self, user_id: &Uuid) -> Result<FilteredUser, String>;
+}
 
 #[derive(Serialize)]
 pub struct LoginResponse {
     pub token: String,
+}
+#[derive(serde::Deserialize, Debug)] // Añade Debug para facilitar el logging
+pub struct RegisterParams {
+    telegram_user_id: Option<String>,
 }
 
 pub async fn auth_middleware(
@@ -42,7 +56,7 @@ pub async fn auth_middleware(
   
   let token = auth_header.trim_start_matches("Bearer ").trim();
   
-  let claims = verify_jwt(token, &state.config.jwt_secret)
+  let claims = verify_jwt(token, &state.jwt_secret)
       .map_err(|e| AppError::Auth(e.to_string()))?;
   
   // Continuar con la siguiente middleware/handler con el token validado
@@ -55,17 +69,19 @@ pub async fn auth_middleware(
 pub async fn register_handler(
  
   State(state): State<Arc<AppState>>,
-    telegram_user_id: Option<String>,
+    Query(params): Query<RegisterParams>,
   Json(payload): Json<CreateUserSchema>,
    
 ) -> Result<Json<Value>, AppError> {
   // Validar entrada
   payload.validate().map_err(|e| AppError::Validation(e.to_string()))?;
-  
+
+  let telegram_id = params.telegram_user_id;
+
   // Registrar usuario
   let user = state
       .auth_service
-      .register_user(&payload, telegram_user_id)
+      .register_user(&payload, telegram_id)
       .map_err(|e| AppError::Auth(e.to_string()))?;
   
   Ok(Json(json!({

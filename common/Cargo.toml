@@ -15,5 +15,5 @@ config.workspace = true
 dotenv.workspace = true
 anyhow.workspace = true
 jsonwebtoken.workspace = true
-#auth = { path = "../auth" }
+
 shared = { path = "../shared" }

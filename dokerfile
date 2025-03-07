@@ -1,0 +1,23 @@
+FROM rust:1.76 as builder
+
+WORKDIR /usr/src/app
+
+# Instalar dependencias de desarrollo
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar archivos del proyecto
+COPY . .
+
+# Compilar la aplicación en modo release
+RUN cargo build --release
+
+# Imagen final
+FROM debian:bullseye-slim
+
+WORKDIR /app
+
+# Instalar dependencias de runtime
+RUN apt-get update && apt-get install -y \

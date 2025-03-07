@@ -9,7 +9,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 use serde::Deserialize;
 use common::jwt::{Claims, verify_jwt};
-use shared::AppState;
+use crate::AppState;
 
 pub async fn me_handler(
   State(state): State<Arc<AppState>>,
@@ -29,7 +29,7 @@ pub async fn me_handler(
   
   let token = auth_header.trim_start_matches("Bearer ").trim();
   
-  let claims = verify_jwt(token, &state.config.jwt_secret)
+  let claims = verify_jwt(token, &state.jwt_secret)
       .map_err(|e| AppError::Auth(e.to_string()))?;
   
   let user_id = Uuid::parse_str(&claims.sub)

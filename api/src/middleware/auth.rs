@@ -6,7 +6,7 @@ use axum::{
   response::Response,
 };
 use common::error::AppError;
-use shared::AppState;
+use crate::AppState;
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use std::sync::Arc;
 
@@ -33,7 +33,7 @@ pub async fn auth_middleware(
   
   let token = auth_header.trim_start_matches("Bearer ").trim();
   
-  let claims = verify_jwt(token, &state.config.jwt_secret)
+  let claims = verify_jwt(token, &state.jwt_secret)
       .map_err(|e| AppError::Auth(e.to_string()))?;
   
   // Continuar con la siguiente middleware/handler con el token validado

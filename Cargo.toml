@@ -6,7 +6,9 @@ members = [
     "common",
     "server",
     "shared",
+    "models",
 ]
+resolver = "2"
 
 [workspace.dependencies]
 tokio = { version = "1.34", features = ["full"] }
@@ -28,3 +30,4 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.6", features = ["v4", "serde"] }
 async-trait = "0.1"
 validator = { version = "0.16", features = ["derive"] }
+bcrypt = "0.13"

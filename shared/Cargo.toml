@@ -2,14 +2,20 @@
 name = "shared"
 version = "0.1.0"
 edition = "2021"
+
 [lib]
 path = "lib.rs"
 
 [dependencies]
 anyhow.workspace = true
-#serde = { version = "1.0", features = ["derive"] }
 validator.workspace = true
 serde_json.workspace = true
-serde.workspace = true
-uuid.workspace = true
 chrono.workspace = true
+jwt = { path = "../jwt" }
+bcrypt = "0.13"
+uuid.workspace = true
+tokio.workspace = true
+axum.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+jsonwebtoken.workspace = true

@@ -1,0 +1,14 @@
+[package]
+name = "jwt"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+jsonwebtoken.workspace = true
+chrono.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+anyhow.workspace = true
+axum.workspace = true
+serde_json.workspace = true

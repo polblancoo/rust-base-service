@@ -16,3 +16,5 @@ async-trait.workspace = true
 # Dependencias internas
 common = { path = "../common" }
 shared = { path = "../shared" }
+repository = { path = "../repository" }
+models = { path = "../models" }
