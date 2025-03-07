@@ -38,6 +38,7 @@ pub async fn me_handler(
   let user = state
       .auth_service
       .get_user(&user_id)
+      .await
       .map_err(|e| AppError::Auth(e.to_string()))?;
   
   Ok(Json(json!({

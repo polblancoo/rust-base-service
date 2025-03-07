@@ -4,6 +4,8 @@ use models::{CreateUserSchema, FilteredUser, LoginUserSchema, User};
 use repository::UserRepository;
 use uuid::Uuid;
 use serde::Serialize;
+use std::future::{ready, Ready};
+use async_trait::async_trait;
 
 use crate::{
     error::AuthError,
@@ -84,72 +86,72 @@ impl<T: UserRepository> AuthService<T> {
     }
 }
 
+// Implementación del trait api::handlers::auth::AuthService para AuthService<T>
+#[async_trait]
 impl<T: UserRepository + Send + Sync + 'static> api::handlers::auth::AuthService for AuthService<T> {
-    fn register_user(&self, user_data: &shared::user::CreateUserSchema, telegram_id: Option<String>) -> Result<shared::user::FilteredUser, String> {
+    async fn register_user(&self, user_data: &shared::user::CreateUserSchema, telegram_id: Option<String>) -> Result<shared::user::FilteredUser, String> {
+        // Convertir de shared::user::CreateUserSchema a models::CreateUserSchema
         let models_user_data = CreateUserSchema {
             email: user_data.email.clone(),
             name: user_data.name.clone().unwrap_or_default(),
             password: user_data.password.clone(),
         };
 
-        let result = tokio::runtime::Handle::current().block_on(async {
-            self.register_user(&models_user_data, telegram_id).await
-        });
+        // Ejecutamos el future y manejamos el resultado
+        let filtered_user = self.register_user(&models_user_data, telegram_id).await
+            .map_err(|e| e.to_string())?;
         
-        result.map_err(|e| e.to_string()).map(|filtered_user| {
-            shared::user::FilteredUser {
-                id: filtered_user.id,
-                email: filtered_user.email,
-                name: Some(filtered_user.name),
-                role: filtered_user.role,
-                created_at: filtered_user.created_at,
-                updated_at: filtered_user.updated_at,
-            }
+        // Convertimos el resultado a shared::user::FilteredUser
+        Ok(shared::user::FilteredUser {
+            id: filtered_user.id,
+            email: filtered_user.email,
+            name: Some(filtered_user.name),
+            role: filtered_user.role,
+            created_at: filtered_user.created_at,
+            updated_at: filtered_user.updated_at,
         })
     }
 
-    fn authenticate_by_email(&self, email: &str, password: &str) -> Result<shared::user::User, String> {
-        let result = tokio::runtime::Handle::current().block_on(async {
-            self.authenticate_by_email(email, password).await
-        });
+    async fn authenticate_by_email(&self, email: &str, password: &str) -> Result<shared::user::User, String> {
+        // Ejecutamos el future y manejamos el resultado
+        let user = self.authenticate_by_email(email, password).await
+            .map_err(|e| e.to_string())?;
         
-        result.map_err(|e| e.to_string()).map(|user| {
-            shared::user::User {
-                id: user.id,
-                email: user.email,
-                password: user.password,
-                name: Some(user.name),
-                role: user.role,
-                telegram_user_id: None,
-                created_at: user.created_at,
-                updated_at: user.updated_at,
-            }
+        // Convertimos el modelo::User a shared::user::User
+        Ok(shared::user::User {
+            id: user.id,
+            email: user.email,
+            password: user.password,
+            name: Some(user.name),
+            role: user.role,
+            telegram_user_id: None,
+            created_at: user.created_at,
+            updated_at: user.updated_at,
         })
     }
 
-    fn authenticate_by_telegram(&self, _telegram_id: &str) -> Result<shared::user::User, String> {
+    async fn authenticate_by_telegram(&self, _telegram_id: &str) -> Result<shared::user::User, String> {
         Err("Autenticación por Telegram no implementada".to_string())
     }
 
-    fn generate_token(&self, user: &shared::user::User) -> Result<String, String> {
+    async fn generate_token(&self, user: &shared::user::User) -> Result<String, String> {
         generate_jwt(&user.id.to_string(), &self.jwt_secret, &self.jwt_expires_in)
             .map_err(|e| e.to_string())
     }
 
-    fn get_user(&self, user_id: &Uuid) -> Result<shared::user::FilteredUser, String> {
-        let result = tokio::runtime::Handle::current().block_on(async {
-            self.get_user(user_id).await
-        });
+    async fn get_user(&self, user_id: &Uuid) -> Result<shared::user::FilteredUser, String> {
+        // Ejecutamos el future y manejamos el resultado
+        let filtered_user = self.get_user(user_id).await
+            .map_err(|e| e.to_string())?;
         
-        result.map_err(|e| e.to_string()).map(|filtered_user| {
-            shared::user::FilteredUser {
-                id: filtered_user.id,
-                email: filtered_user.email,
-                name: Some(filtered_user.name),
-                role: filtered_user.role,
-                created_at: filtered_user.created_at,
-                updated_at: filtered_user.updated_at,
-            }
+        // Convertimos el resultado a shared::user::FilteredUser
+        Ok(shared::user::FilteredUser {
+            id: filtered_user.id,
+            email: filtered_user.email,
+            name: Some(filtered_user.name),
+            role: filtered_user.role,
+            created_at: filtered_user.created_at,
+            updated_at: filtered_user.updated_at,
         })
     }
 }

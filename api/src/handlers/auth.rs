@@ -17,14 +17,16 @@ use axum::extract::{State,  Query};
 use axum::response::Response;
 use serde::Serialize;
 use uuid::Uuid;
+use async_trait::async_trait;
 
 // Definimos un trait para AuthService
+#[async_trait::async_trait]
 pub trait AuthService: Send + Sync {
-    fn register_user(&self, user_data: &CreateUserSchema, telegram_id: Option<String>) -> Result<FilteredUser, String>;
-    fn authenticate_by_email(&self, email: &str, password: &str) -> Result<shared::user::User, String>;
-    fn authenticate_by_telegram(&self, telegram_id: &str) -> Result<shared::user::User, String>;
-    fn generate_token(&self, user: &shared::user::User) -> Result<String, String>;
-    fn get_user(&self, user_id: &Uuid) -> Result<FilteredUser, String>;
+    async fn register_user(&self, user_data: &CreateUserSchema, telegram_id: Option<String>) -> Result<FilteredUser, String>;
+    async fn authenticate_by_email(&self, email: &str, password: &str) -> Result<shared::user::User, String>;
+    async fn authenticate_by_telegram(&self, telegram_id: &str) -> Result<shared::user::User, String>;
+    async fn generate_token(&self, user: &shared::user::User) -> Result<String, String>;
+    async fn get_user(&self, user_id: &Uuid) -> Result<FilteredUser, String>;
 }
 
 #[derive(Serialize)]
@@ -82,6 +84,7 @@ pub async fn register_handler(
   let user = state
       .auth_service
       .register_user(&payload, telegram_id)
+      .await
       .map_err(|e| AppError::Auth(e.to_string()))?;
   
   Ok(Json(json!({
@@ -97,13 +100,13 @@ pub async fn login_handler(
 ) -> Result<Json<LoginResponse>, (StatusCode, Json<serde_json::Value>)> {
   let user = if let Some(email) = body.email {
       // Autenticación con correo electrónico
-      match app_state.auth_service.authenticate_by_email(&email, &body.password) {
+      match app_state.auth_service.authenticate_by_email(&email, &body.password).await {
           Ok(user) => user,
           Err(_) => return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "Invalid email or password"}))))
       }
   } else if let Some(telegram_user_id) = body.telegram_user_id {
       // Autenticación con Telegram
-      match app_state.auth_service.authenticate_by_telegram(&telegram_user_id) {
+      match app_state.auth_service.authenticate_by_telegram(&telegram_user_id).await {
           Ok(user) => user,
           Err(_) => return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "Invalid Telegram user ID"}))))
       }
@@ -112,7 +115,7 @@ pub async fn login_handler(
   };
 
   // Generar token JWT
-  let token = match app_state.auth_service.generate_token(&user) {
+  let token = match app_state.auth_service.generate_token(&user).await {
       Ok(token) => token,
       Err(_) => return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to generate token"}))))
   };

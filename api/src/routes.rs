@@ -6,11 +6,14 @@ use axum::{
 use std::sync::Arc;
 use crate::{
     handlers::{
-        auth::{login_handler, register_handler, RegisterParams}, // <--- Aquí está el cambio
+        auth::{login_handler, register_handler, RegisterParams}, 
         me::me_handler,
     },
-    middleware::auth::auth_middleware,
-    AppState, // Importar desde crate
+    middleware::{
+        auth::auth_middleware,
+        logging::logging_middleware,
+    },
+    AppState, 
 };
 
 pub fn create_router(app_state: Arc<AppState>) -> Router {
@@ -25,5 +28,6 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .nest("/api/auth", auth_routes)
         .nest("/api/users", protected_routes)
+        .layer(middleware::from_fn(logging_middleware))
         .with_state(app_state)
 }

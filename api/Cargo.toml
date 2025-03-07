@@ -17,6 +17,7 @@ thiserror.workspace = true
 validator.workspace = true
 uuid.workspace = true
 jsonwebtoken.workspace = true
+async-trait = "0.1.77"
 
 # Dependencias internas
 
