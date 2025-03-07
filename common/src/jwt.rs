@@ -2,7 +2,6 @@ use anyhow::Result;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 //use crate::error::AppError;
 use crate::error::AppError;
@@ -16,7 +15,7 @@ pub struct Claims {
 }
 
 pub fn generate_jwt(
-    user_id: &Uuid,
+    user_id: &str,
     jwt_secret: &str,
     expiration: &str,
 ) -> Result<String, AppError> {

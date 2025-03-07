@@ -15,5 +15,3 @@ config.workspace = true
 dotenv.workspace = true
 anyhow.workspace = true
 jsonwebtoken.workspace = true
-
-shared = { path = "../shared" }

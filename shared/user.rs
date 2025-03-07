@@ -56,8 +56,8 @@ impl User {
             email: self.email.clone(),
             name: self.name.clone(),
             role: self.role.clone(),
-            created_at: self.created_at.unwrap_or(Utc::now()),
-            updated_at: self.updated_at.unwrap_or(Utc::now()),
+            created_at: self.created_at.unwrap_or_else(Utc::now),
+            updated_at: self.updated_at.unwrap_or_else(Utc::now),
         }
     }
 }

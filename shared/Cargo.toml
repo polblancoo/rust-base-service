@@ -11,7 +11,7 @@ anyhow.workspace = true
 validator.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
-jwt = { path = "../jwt" }
+common = { path = "../common" }
 bcrypt = "0.13"
 uuid.workspace = true
 tokio.workspace = true

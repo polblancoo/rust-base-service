@@ -2,7 +2,7 @@ use anyhow::Result;
 use sqlx::{PgPool, FromRow};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
-use models::{User, CreateUserSchema};
+use shared::user::{User, CreateUserSchema};
 use std::future::Future;
 
 #[derive(FromRow)]
@@ -12,6 +12,7 @@ struct UserRow {
     password: String,
     name: String,
     role: String,
+    telegram_user_id: Option<String>,
     created_at: Option<DateTime<Utc>>,
     updated_at: Option<DateTime<Utc>>,
 }
@@ -44,7 +45,8 @@ impl UserRepository for UserRepositoryImpl {
                 id: user.id,
                 email: user.email,
                 password: user.password,
-                name: user.name,
+                name: Some(user.name),
+                telegram_user_id: user.telegram_user_id,
                 role: user.role,
                 created_at: user.created_at,
                 updated_at: user.updated_at,
@@ -63,7 +65,8 @@ impl UserRepository for UserRepositoryImpl {
                 id: user.id,
                 email: user.email,
                 password: user.password,
-                name: user.name,
+                name: Some(user.name),
+                telegram_user_id: user.telegram_user_id,
                 role: user.role,
                 created_at: user.created_at,
                 updated_at: user.updated_at,
@@ -79,12 +82,13 @@ impl UserRepository for UserRepositoryImpl {
     ) -> impl Future<Output = Result<User>> + Send + 'a {
         async move {
             let user = sqlx::query_as::<_, UserRow>(
-                "INSERT INTO users (email, password, name, role) VALUES ($1, $2, $3, $4) RETURNING *",
+                "INSERT INTO users (email, password, name, role, telegram_user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *",
             )
                 .bind(&user_data.email)
                 .bind(hashed_password)
                 .bind(&user_data.name)
-                .bind("user")
+                .bind(&user_data.role)
+                .bind(&telegram_user_id)
                 .fetch_one(&self.pool)
                 .await?;
 
@@ -92,7 +96,8 @@ impl UserRepository for UserRepositoryImpl {
                 id: user.id,
                 email: user.email,
                 password: user.password,
-                name: user.name,
+                name: Some(user.name),
+                telegram_user_id: user.telegram_user_id,
                 role: user.role,
                 created_at: user.created_at,
                 updated_at: user.updated_at,

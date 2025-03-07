@@ -1,14 +1,12 @@
 use axum::{
   extract::{Json, State},
-  http::{HeaderMap, StatusCode},
+  http::HeaderMap,
 };
 use common::error::AppError;
-use shared::user::FilteredUser;
 use serde_json::{json, Value};
 use std::sync::Arc;
 use uuid::Uuid;
-use serde::Deserialize;
-use common::jwt::{Claims, verify_jwt};
+use common::jwt::verify_jwt;
 use crate::AppState;
 
 pub async fn me_handler(

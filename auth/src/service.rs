@@ -1,10 +1,9 @@
 use anyhow::Result;
-use jwt::generate_jwt;
-use models::{CreateUserSchema, FilteredUser, LoginUserSchema, User};
+use common::jwt::generate_jwt;
+use shared::user::{CreateUserSchema, FilteredUser, LoginUserSchema, User};
 use repository::UserRepository;
 use uuid::Uuid;
 use serde::Serialize;
-use std::future::{ready, Ready};
 use async_trait::async_trait;
 use tracing::{info, error, debug, warn};
 
@@ -165,8 +164,9 @@ impl<T: UserRepository + Send + Sync + 'static> api::handlers::auth::AuthService
         // Convertir de shared::user::CreateUserSchema a models::CreateUserSchema
         let models_user_data = CreateUserSchema {
             email: user_data.email.clone(),
-            name: user_data.name.clone().unwrap_or_default(),
+            name: user_data.name.clone(),
             password: user_data.password.clone(),
+            role: user_data.role.clone(),
         };
 
         // Ejecutamos el future y manejamos el resultado
@@ -185,7 +185,7 @@ impl<T: UserRepository + Send + Sync + 'static> api::handlers::auth::AuthService
         Ok(shared::user::FilteredUser {
             id: filtered_user.id,
             email: filtered_user.email,
-            name: Some(filtered_user.name),
+            name: filtered_user.name,
             role: filtered_user.role,
             created_at: filtered_user.created_at,
             updated_at: filtered_user.updated_at,
@@ -212,7 +212,7 @@ impl<T: UserRepository + Send + Sync + 'static> api::handlers::auth::AuthService
             id: user.id,
             email: user.email,
             password: user.password,
-            name: Some(user.name),
+            name: user.name,
             role: user.role,
             telegram_user_id: None,
             created_at: user.created_at,
@@ -259,7 +259,7 @@ impl<T: UserRepository + Send + Sync + 'static> api::handlers::auth::AuthService
         Ok(shared::user::FilteredUser {
             id: filtered_user.id,
             email: filtered_user.email,
-            name: Some(filtered_user.name),
+            name: filtered_user.name,
             role: filtered_user.role,
             created_at: filtered_user.created_at,
             updated_at: filtered_user.updated_at,

@@ -1,13 +1,12 @@
 use axum::{
   extract::{Request, Json},
     http::StatusCode,
-    response::IntoResponse,
 };
 use std::sync::Arc;
 use common::error::AppError;
 use shared::user::{CreateUserSchema, FilteredUser, LoginUserSchema};
 use crate::AppState;
-use common::jwt::{Claims, verify_jwt};
+use common::jwt::verify_jwt;
 
 use serde_json::{json, Value};
 use validator::Validate;
@@ -17,7 +16,6 @@ use axum::extract::{State,  Query};
 use axum::response::Response;
 use serde::Serialize;
 use uuid::Uuid;
-use async_trait::async_trait;
 
 // Definimos un trait para AuthService
 #[async_trait::async_trait]
@@ -58,7 +56,7 @@ pub async fn auth_middleware(
   
   let token = auth_header.trim_start_matches("Bearer ").trim();
   
-  let claims = verify_jwt(token, &state.jwt_secret)
+  let _claims = verify_jwt(token, &state.jwt_secret)
       .map_err(|e| AppError::Auth(e.to_string()))?;
   
   // Continuar con la siguiente middleware/handler con el token validado

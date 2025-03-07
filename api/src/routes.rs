@@ -6,7 +6,7 @@ use axum::{
 use std::sync::Arc;
 use crate::{
     handlers::{
-        auth::{login_handler, register_handler, RegisterParams}, 
+        auth::{login_handler, register_handler}, 
         me::me_handler,
     },
     middleware::{

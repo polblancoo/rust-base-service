@@ -2,15 +2,12 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 use anyhow::Result;
-use chrono::{DateTime, Utc};
-use jwt::generate_jwt;
 use bcrypt::{hash, verify, DEFAULT_COST};
 
 pub mod user;
 use user::{
     User, 
     CreateUserSchema, 
-    LoginUserSchema, 
     FilteredUser
 };
 
@@ -26,11 +23,28 @@ pub enum AuthError {
     PasswordVerifyError(String),
     #[error("Validation error")]
     ValidationError(String),
+    #[error("Token generation error: {0}")]
+    TokenGenerationError(String),
+    #[error("Token expired")]
+    TokenExpired,
+    #[error("Invalid token: {0}")]
+    InvalidToken(String),
 }
 
 impl From<jsonwebtoken::errors::Error> for AuthError {
-    fn from(_err: jsonwebtoken::errors::Error) -> AuthError {
-        AuthError::InternalServerError
+    fn from(err: jsonwebtoken::errors::Error) -> AuthError {
+        AuthError::InvalidToken(err.to_string())
+    }
+}
+
+impl From<common::error::AppError> for AuthError {
+    fn from(err: common::error::AppError) -> Self {
+        match err {
+            common::error::AppError::TokenExpired => AuthError::TokenExpired,
+            common::error::AppError::InvalidToken(msg) => AuthError::InvalidToken(msg),
+            common::error::AppError::TokenGenerationError(msg) => AuthError::TokenGenerationError(msg),
+            _ => AuthError::InternalServerError,
+        }
     }
 }
 
@@ -92,7 +106,7 @@ impl<T: UserRepository + Send + Sync> AuthServiceAsync for AuthServiceImpl<T> {
     fn generate_token<'a>(&'a self, user: &'a User) -> Box<dyn std::future::Future<Output = Result<String, AuthError>> + Send + 'a> {
         Box::new(async move {
             let user_id_str = user.id.to_string();
-            let token = generate_jwt(&user_id_str, &self.jwt_secret, &self.jwt_expires_in)?;
+            let token = common::jwt::generate_jwt(&user_id_str, &self.jwt_secret, &self.jwt_expires_in)?;
             Ok(token)
         })
     }
@@ -146,7 +160,7 @@ impl<T: UserRepository + Send + Sync> AuthServiceImplTrait for AuthServiceImpl<T
     fn generate_token<'a>(&'a self, user: &'a User) -> Box<dyn std::future::Future<Output = Result<String, AuthError>> + Send + 'a> {
         Box::new(async move {
             let user_id_str = user.id.to_string();
-            let token = generate_jwt(&user_id_str, &self.jwt_secret, &self.jwt_expires_in)?;
+            let token = common::jwt::generate_jwt(&user_id_str, &self.jwt_secret, &self.jwt_expires_in)?;
             Ok(token)
         })
     }

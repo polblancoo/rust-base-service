@@ -4,7 +4,7 @@ use axum::{
     response::Response,
 };
 use std::time::Instant;
-use tracing::{info, instrument, Span};
+use tracing::{info, instrument};
 use uuid::Uuid;
 
 /// Middleware para registrar información detallada de las solicitudes HTTP

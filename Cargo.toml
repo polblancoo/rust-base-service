@@ -6,7 +6,7 @@ members = [
     "common",
     "server",
     "shared",
-    "models",
+    "repository",
 ]
 resolver = "2"
 
